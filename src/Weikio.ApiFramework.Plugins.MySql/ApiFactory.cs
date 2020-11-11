@@ -12,36 +12,45 @@ namespace Weikio.ApiFramework.Plugins.MySql
     {
         public static Task<IEnumerable<Type>> Create(MySqlOptions configuration)
         {
-            var querySchema = new List<Table>();
-            var nonQueryCommands = new SqlCommands();
-
-            using (var schemaReader = new SchemaReader(configuration))
+            try
             {
-                schemaReader.Connect();
+                var querySchema = new List<Table>();
+                var nonQueryCommands = new SqlCommands();
 
-                if (configuration.SqlCommands != null)
+                using (var schemaReader = new SchemaReader(configuration))
                 {
-                    var commandsSchema = schemaReader.GetSchemaFor(configuration.SqlCommands);
+                    schemaReader.Connect();
 
-                    querySchema.AddRange(commandsSchema.QueryCommands);
-                    nonQueryCommands = commandsSchema.NonQueryCommands;
+                    if (configuration.SqlCommands != null)
+                    {
+                        var commandsSchema = schemaReader.GetSchemaFor(configuration.SqlCommands);
+
+                        querySchema.AddRange(commandsSchema.QueryCommands);
+                        nonQueryCommands = commandsSchema.NonQueryCommands;
+                    }
+
+                    if (configuration.ShouldGenerateApisForTables())
+                    {
+                        var dbTables = schemaReader.ReadSchemaFromDatabaseTables();
+                        querySchema.AddRange(dbTables);
+                    }
                 }
 
-                if (configuration.ShouldGenerateApisForTables())
-                {
-                    var dbTables = schemaReader.ReadSchemaFromDatabaseTables();
-                    querySchema.AddRange(dbTables);
-                }
+                var generator = new CodeGenerator();
+                var assembly = generator.GenerateAssembly(querySchema, nonQueryCommands, configuration);
+
+                var result = assembly.GetExportedTypes()
+                    .Where(x => x.Name.EndsWith("Api"))
+                    .ToList();
+
+                return Task.FromResult<IEnumerable<Type>>(result);
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
 
-            var generator = new CodeGenerator();
-            var assembly = generator.GenerateAssembly(querySchema, nonQueryCommands, configuration);
-
-            var result = assembly.GetExportedTypes()
-                .Where(x => x.Name.EndsWith("Api"))
-                .ToList();
-
-            return Task.FromResult<IEnumerable<Type>>(result);
+                throw;
+            }
         }
     }
 }

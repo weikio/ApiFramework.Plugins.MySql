@@ -14,7 +14,7 @@ namespace Weikio.ApiFramework.Plugins.MySql.Schema
         public static (string, MySqlParameter[]) CreateQuery(string tableName, int? top, List<string> fields)
         {
             var sqlQuery =
-                $"SELECT {(top.GetValueOrDefault() > 0 ? "TOP " + top.ToString() : "")} {(fields?.Any() == true ? string.Join(",", fields.Select(f => f.ToUpper())) : " * ")} FROM {tableName} ";
+                $"SELECT {(fields?.Any() == true ? string.Join(",", fields.Select(f => f.ToUpper())) : " * ")} FROM {tableName} {(top.GetValueOrDefault() > 0 ? " Limit " + top.ToString() : "")} ";
 
             return (sqlQuery, new MySqlParameter[] { });
         }

@@ -91,8 +91,6 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
             sb.Append(text);
         }
 
-
-
         public static void Namespace(this StringBuilder sb, string ns)
         {
             sb.AppendLine($"namespace {ns}");

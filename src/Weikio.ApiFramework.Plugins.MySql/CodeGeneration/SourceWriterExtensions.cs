@@ -283,7 +283,7 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
 
         private static string GetPropertyName(string originalName)
         {
-            var isValid = SyntaxFacts.IsValidIdentifier(originalName);
+            var isValid = IsValid(originalName);
 
             if (isValid)
             {
@@ -297,12 +297,20 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
                 result = result.Replace(" ", "").Trim();
             }
 
-            if (SyntaxFacts.IsValidIdentifier(result))
+            if (IsValid(originalName))
             {
                 return result;
             }
 
             return $"@{result}";
+        }
+
+        private static bool IsValid(string originalName)
+        {
+            var keywordKind = SyntaxFacts.GetKeywordKind(originalName);
+            var isValid = SyntaxFacts.IsValidIdentifier(originalName) && SyntaxFacts.IsReservedKeyword(keywordKind) == false;
+
+            return isValid;
         }
     }
 }

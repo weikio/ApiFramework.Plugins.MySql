@@ -144,11 +144,13 @@ namespace Weikio.ApiFramework.Plugins.MySql.Schema
 
                 using (var command = _connection.CreateCommand())
                 {
+                    Console.WriteLine($"Handling {tableNameWithQualifier}");
                     command.CommandText = $"select * from {tableNameWithQualifier}";
                     command.CommandTimeout = (int) TimeSpan.FromMinutes(5).TotalSeconds;
 
                     var columns = GetColumns(command);
                     schema.Add(new Table(tableName, tableQualifier, columns));
+                    Console.WriteLine($"Handled {tableNameWithQualifier}");
                 }
             }
 
