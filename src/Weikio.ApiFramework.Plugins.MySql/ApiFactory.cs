@@ -36,6 +36,7 @@ namespace Weikio.ApiFramework.Plugins.MySql
                     }
                 }
 
+                querySchema = querySchema.OrderBy(x => x.Name).ToList();
                 var generator = new CodeGenerator();
                 var assembly = generator.GenerateAssembly(querySchema, nonQueryCommands, configuration);
 
