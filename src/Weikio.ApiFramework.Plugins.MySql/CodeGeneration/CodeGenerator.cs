@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using MySql.Data.Types;
 using Weikio.ApiFramework.Plugins.MySql.Configuration;
@@ -19,6 +20,7 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
             gen.ReferenceAssembly(typeof(MySqlDateTime).Assembly);
             gen.ReferenceAssembly(typeof(MySqlCommand).Assembly);
             gen.ReferenceAssembly(typeof(MySqlHelpers).Assembly);
+            gen.ReferenceAssembly(typeof(ILogger).Assembly);
 
             var assemblyCode = GenerateCode(querySchema, nonQueryCommands, mySqlOptions);
 
@@ -50,6 +52,7 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
             sb.UsingNamespace("System.Diagnostics");
             sb.UsingNamespace("Weikio.ApiFramework.Plugins.MySql.Configuration");
             sb.UsingNamespace("Weikio.ApiFramework.Plugins.MySql.Schema");
+            sb.UsingNamespace("Microsoft.Extensions.Logging");
             sb.WriteLine("");
 
             foreach (var table in querySchema)

@@ -56,6 +56,12 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
         {
             writer.StartClass(GetApiClassName(table));
 
+            writer.WriteLine($"private readonly ILogger<{GetApiClassName(table)}> _logger;");
+            writer.WriteLine($"public {GetApiClassName(table)} (ILogger<{GetApiClassName(table)}> logger)");
+            writer.WriteLine("{");
+            writer.WriteLine("_logger = logger;");
+            writer.WriteLine("}");
+            
             var columnMap = new Dictionary<string, string>();
 
             foreach (var column in table.Columns)
@@ -221,6 +227,9 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
                     cmdBlock.WriteLine("cmd.Parameters.AddRange(queryAndParameters.Item2);");
 
                     cmdBlock.WriteLine("cmd.CommandText = query;");
+                    cmdBlock.WriteLine("_logger.LogDebug(\"Executing query: {Query}\", cmd.CommandText);");
+                    cmdBlock.WriteLine("var sw = new System.Diagnostics.Stopwatch();");
+                    cmdBlock.WriteLine("sw.Start();");
 
                     cmdBlock.UsingBlock("var reader = cmd.ExecuteReader()", readerBlock =>
                     {
@@ -244,6 +253,9 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
                         readerBlock.Write("result.Add(item);");
                         readerBlock.FinishBlock(); // Finish the while loop
                     });
+                    
+                    cmdBlock.WriteLine("sw.Stop();");
+                    cmdBlock.WriteLine("_logger.LogTrace(\"Query took {ElapsedTime} and {RowCount} rows were found.\", sw.Elapsed, result.Count);");
                 });
             });
 
