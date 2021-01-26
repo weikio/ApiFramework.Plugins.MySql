@@ -209,15 +209,15 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
         {
             var dataTypeName = GetDataTypeName(table);
 
-            writer.WriteLine($"public List<{dataTypeName}> Select(int? top)");
+            writer.WriteLine($"public async IAsyncEnumerable<{dataTypeName}> Select(int? top)");
             writer.WriteLine("{");
-            writer.WriteLine($"var result = new List<{dataTypeName}>();");
+            writer.WriteLine("try{");
             writer.WriteLine("var fields = new List<string>();");
             writer.WriteLine("");
 
             writer.UsingBlock($"var conn = new MySqlConnection(Configuration.ConnectionString)", w =>
             {
-                w.WriteLine("conn.Open();");
+                w.WriteLine("await conn.OpenAsync();");
 
                 w.UsingBlock("var cmd = conn.CreateCommand()", cmdBlock =>
                 {
@@ -229,11 +229,12 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
                     cmdBlock.WriteLine("cmd.CommandText = query;");
                     cmdBlock.WriteLine("_logger.LogDebug(\"Executing query: {Query}\", cmd.CommandText);");
                     cmdBlock.WriteLine("var sw = new System.Diagnostics.Stopwatch();");
+                    cmdBlock.WriteLine("var rowcount = 0;");
                     cmdBlock.WriteLine("sw.Start();");
 
-                    cmdBlock.UsingBlock("var reader = cmd.ExecuteReader()", readerBlock =>
+                    cmdBlock.UsingBlock("var reader = await cmd.ExecuteReaderAsync()", readerBlock =>
                     {
-                        readerBlock.WriteLine("while (reader.Read())");
+                        readerBlock.WriteLine("while (await reader.ReadAsync())");
                         readerBlock.WriteLine("{");
                         readerBlock.WriteLine($"var item = new {dataTypeName}();");
                         readerBlock.WriteLine("var selectedColumns = ColumnMap;");
@@ -250,16 +251,23 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
                             "item[column.Value] = reader[column.Key] == DBNull.Value ? null : reader[column.Key];");
                         readerBlock.FinishBlock(); // Finish the column setting foreach loop
 
-                        readerBlock.Write("result.Add(item);");
+                        readerBlock.WriteLine("_logger.LogTrace(\"Yielding item\");");
+                        readerBlock.Write("yield return item;");
+                        readerBlock.Write("rowcount += 1;");
                         readerBlock.FinishBlock(); // Finish the while loop
                     });
                     
                     cmdBlock.WriteLine("sw.Stop();");
-                    cmdBlock.WriteLine("_logger.LogTrace(\"Query took {ElapsedTime} and {RowCount} rows were found.\", sw.Elapsed, result.Count);");
+                    cmdBlock.WriteLine("_logger.LogTrace(\"Query took {ElapsedTime} and {RowCount} rows were found.\", sw.Elapsed, rowcount);");
                 });
             });
+            writer.WriteLine("}");
+            writer.WriteLine("catch (Exception e)");
+            writer.WriteLine("{");
+            writer.WriteLine("_logger.LogError(e, \"Failed to read data.\");");
+            writer.WriteLine("}");
+            
 
-            writer.Write("return result;");
             writer.FinishBlock(); // Finish the method
         }
 
