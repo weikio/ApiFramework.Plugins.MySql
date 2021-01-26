@@ -211,7 +211,6 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
 
             writer.WriteLine($"public async IAsyncEnumerable<{dataTypeName}> Select(int? top)");
             writer.WriteLine("{");
-            writer.WriteLine("try{");
             writer.WriteLine("var fields = new List<string>();");
             writer.WriteLine("");
 
@@ -251,7 +250,6 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
                             "item[column.Value] = reader[column.Key] == DBNull.Value ? null : reader[column.Key];");
                         readerBlock.FinishBlock(); // Finish the column setting foreach loop
 
-                        readerBlock.WriteLine("_logger.LogTrace(\"Yielding item\");");
                         readerBlock.Write("yield return item;");
                         readerBlock.Write("rowcount += 1;");
                         readerBlock.FinishBlock(); // Finish the while loop
@@ -261,12 +259,6 @@ namespace Weikio.ApiFramework.Plugins.MySql.CodeGeneration
                     cmdBlock.WriteLine("_logger.LogTrace(\"Query took {ElapsedTime} and {RowCount} rows were found.\", sw.Elapsed, rowcount);");
                 });
             });
-            writer.WriteLine("}");
-            writer.WriteLine("catch (Exception e)");
-            writer.WriteLine("{");
-            writer.WriteLine("_logger.LogError(e, \"Failed to read data.\");");
-            writer.WriteLine("}");
-            
 
             writer.FinishBlock(); // Finish the method
         }
