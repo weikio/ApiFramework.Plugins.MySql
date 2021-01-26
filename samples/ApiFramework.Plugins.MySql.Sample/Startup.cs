@@ -23,12 +23,12 @@ namespace Weikio.ApiFramework.Plugins.MySql.Sample
             services.AddControllers();
 
             services.AddApiFramework()
-                .AddMySql("/data",
+                .AddMySql("/mysql",
                     new MySqlOptions()
                     {
                         ConnectionString =
-                            "server=192.168.1.11;port=3306;uid=root;pwd=30KWMIl98mAD;database=employees;Convert Zero Datetime=True;Allow Zero Datetime=False",
-                        Tables = new[] { "title*" }
+                            "server=hostname;port=port;uid=user;pwd=password;database=mydb;Convert Zero Datetime=True;Allow Zero Datetime=False",
+                        IncludeSchemaInName = false
                     });
 
             services.AddOpenApiDocument();
